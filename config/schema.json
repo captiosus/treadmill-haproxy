@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Treadmill HAProxy",
+  "description": "Base schema for Treadmill HAProxy",
+  "type": "object",
+  "properties": {
+    "haproxy": {
+      "description": "Settings for HAProxy",
+      "type": "object",
+      "properties": {
+        "global": {
+          "description": "HAProxy global parameters",
+          "type": "array"
+        },
+        "default": {
+          "description": "HAProxy default parameters",
+          "type": "array"
+        }
+      }
+    },
+    "services": {
+      "patternProperties": {
+        "^.*$": {
+          "description": "Service name",
+          "type": "object",
+          "properties": {
+            "haproxy": {
+              "description": "HAProxy parameters per service",
+              "type": "object",
+              "properties": {
+                "server": {
+                  "description": "Per server parameters",
+                  "type": "array"
+                },
+                "listen": {
+                  "description": "Per listen block parameters",
+                  "type": "array"
+                }
+              }
+            },
+            "treadmill": {
+              "description": "Treadmill properties for apps started",
+              "type": "object",
+              "properties": {
+                "appname": {
+                  "description": "Appname for treadmill app started",
+                  "type": "string"
+                },
+                "manifest": {
+                  "description": "Manifest for treadmill app started",
+                  "type": "string"
+                },
+                "port": {
+                  "description": "Open port on treadmill app",
+                  "type": "integer"
+                }
+              },
+              "required": ["appname", "manifest", "port"]
+            },
+            "elasticity": {
+              "description": "Settings for the elasticity of service",
+              "type": "object",
+              "properties": {
+                "method": {
+                  "description": "Method for expansion and retraction",
+                  "type": "string",
+                  "oneOf": ["conn_rate", "queue", "response"]
+                },
+                "steps": {
+                  "description": "Manual config of when to expand servers",
+                  "type": "array"
+                },
+                "breakpoint": {
+                  "description": "Breakpoint when a new server is required",
+                  "type": "integer"
+                },
+                "hold_conns": {
+                  "description": "Stop conns until there is a server available",
+                  "type": "boolean"
+                },
+                "min_servers": {
+                  "description": "Minimum number of servers to keep available",
+                  "type": "integer"
+                },
+                "max_servers": {
+                  "description": "Maximum number of servers to start",
+                  "type": "integer"
+                }
+              },
+              "required": ["method"]
+            }
+          },
+          "required": ["treadmill", "elasticity"]
+        }
+      }
+    }
+  },
+  "required": ["services"]
+}

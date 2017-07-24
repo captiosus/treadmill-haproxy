@@ -1,0 +1,44 @@
+{
+  "haproxy": {
+    "global": ["daemon"],
+    "defaults": [
+      "timeout connect 5000ms",
+      "timeout client 5000ms",
+      "timeout server 5000ms",
+      "balance roundrobin"
+    ]
+  },
+  "services": {
+    "demo": {
+      "elasticity": {
+        "method": "conn_rate",
+        "steps": [100, 300],
+        "min_servers": 1
+      },
+      "haproxy": {
+        "server": ["check", "maxconn 10"],
+        "listen": ["mode http"]
+      },
+      "treadmill": {
+        "appname": "treadmld.haproxy",
+        "manifest": "manifest.yaml",
+        "port": 8000
+      }
+    },
+    "connection_hold": {
+      "elasticity": {
+        "method": "conn_rate",
+        "steps": [100, 300],
+        "hold_conns": true
+      },
+      "haproxy": {
+        "server": ["check", "maxconn 10"],
+        "listen": ["mode http"]
+      },
+      "treadmill": {
+        "appname": "treadmld.haproxy_hold",
+        "manifest": "manifest.yaml"
+      }
+    }
+  }
+}
