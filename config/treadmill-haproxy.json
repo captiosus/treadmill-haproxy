@@ -37,7 +37,8 @@
       },
       "treadmill": {
         "appname": "treadmld.haproxy_hold",
-        "manifest": "manifest.yaml"
+        "manifest": "manifest.yaml",
+        "port": 8000
       }
     }
   }

@@ -63,8 +63,7 @@
               "properties": {
                 "method": {
                   "description": "Method for expansion and retraction",
-                  "type": "string",
-                  "oneOf": ["conn_rate", "queue", "response"]
+                  "type": "string"
                 },
                 "steps": {
                   "description": "Manual config of when to expand servers",
