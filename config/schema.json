@@ -35,6 +35,10 @@
                 "listen": {
                   "description": "Per listen block parameters",
                   "type": "array"
+                },
+                "port": {
+                  "description": "Port used to access HAProxy block",
+                  "type": "integer"
                 }
               }
             },
@@ -89,7 +93,7 @@
               "required": ["method"]
             }
           },
-          "required": ["treadmill", "elasticity"]
+          "required": ["treadmill"]
         }
       }
     }

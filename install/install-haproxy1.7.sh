@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root"
+   exit 1
+fi
+
+set -e
+
 wget http://www.haproxy.org/download/1.7/src/haproxy-1.7.8.tar.gz \
   -O ~/haproxy.tar.gz
 

@@ -1,12 +1,10 @@
 """Main launcher for HAProxy watcher."""
 
-import atexit
 import logging
 
 import click
 
 from orchestrator import Orchestrator
-import haproxy_control
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,9 +22,6 @@ def main(socket, config_file, haproxy_file):
     orch = Orchestrator(socket, config_file, haproxy_file)
     orch.monitor()
 
-def cleanup():
-    haproxy_control.stop_haproxy()
 
 if __name__ == '__main__':
-    atexit.register(cleanup)
     main()

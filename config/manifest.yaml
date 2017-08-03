@@ -1,0 +1,13 @@
+---
+cpu: 10%
+disk: 100M
+memory: 150M
+services:
+  - name: web_server
+    command: /usr/bin/python -m SimpleHTTPServer 8000
+    restart:
+      limit: 3
+      interval: 60
+endpoints:
+  - name: http
+    port: 8000

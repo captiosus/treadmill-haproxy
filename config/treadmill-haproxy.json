@@ -10,18 +10,14 @@
   },
   "services": {
     "demo": {
-      "elasticity": {
-        "method": "conn_rate",
-        "steps": [100, 300],
-        "min_servers": 1
-      },
       "haproxy": {
         "server": ["check", "maxconn 10"],
-        "listen": ["mode http"]
+        "listen": ["mode http"],
+        "port": 8000
       },
       "treadmill": {
         "appname": "treadmld.haproxy",
-        "manifest": "manifest.yaml",
+        "manifest": "/home/vagrant/treadmill-haproxy/config/manifest.yaml",
         "port": 8000
       }
     },
@@ -33,12 +29,13 @@
       },
       "haproxy": {
         "server": ["check", "maxconn 10"],
-        "listen": ["mode http"]
+        "listen": ["mode http"],
+        "port": 7000
       },
       "treadmill": {
         "appname": "treadmld.haproxy_hold",
-        "manifest": "manifest.yaml",
-        "port": 8000
+        "manifest": "/home/vagrant/treadmill-haproxy/config/manifest.yaml",
+        "port": 7000
       }
     }
   }
