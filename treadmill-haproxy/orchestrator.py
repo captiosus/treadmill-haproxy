@@ -1,3 +1,4 @@
+import logging
 import sys
 
 from haproxyadmin import haproxy
@@ -18,6 +19,7 @@ class Orchestrator(object):
         self._pools = []
 
         config_parser = haproxy_config.ConfParse(config_file, haproxy_file)
+        self._haproxy_parser = config_parser
         services = config_parser.parse_config()
         config_parser.config_write()
 
@@ -39,8 +41,15 @@ class Orchestrator(object):
 
     def loop(self):
         """Loop through watchers and run the monitor loop for each"""
+        changes = False
         for service_watcher in self._watchers:
-            service_watcher.loop()
+            if service_watcher.loop():
+                changes = True
+
+        if changes:
+            logging.debug("Write to config and restart")
+            self._haproxy_parser.config_write()
+            haproxy_control.restart_haproxy()
 
         for service_pool in self._pools:
             service_pool.loop()
@@ -49,5 +58,5 @@ class Orchestrator(object):
         """Begin monitor loop"""
         log.startLogging(sys.stdout)
         self._loop = task.LoopingCall(self.loop)
-        self._loop.start(5)
+        self._loop.start(7)
         reactor.run()

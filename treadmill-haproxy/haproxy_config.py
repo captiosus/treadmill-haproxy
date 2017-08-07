@@ -1,6 +1,6 @@
 """Parses configuration files"""
 
-import collections
+from collections import OrderedDict
 import json
 
 from jsonschema import validate
@@ -10,7 +10,7 @@ SCHEMA = "config/schema.json"
 
 def load_json(filepath):
     with open(filepath, 'r') as json_file:
-        return json.loads(json_file.read())
+        return json.loads(json_file.read(), object_pairs_hook=OrderedDict)
 
 
 class ConfParse(object):
@@ -28,15 +28,14 @@ class ConfParse(object):
     def parse_config(self):
         if 'haproxy' in self._config:
             # Loop to ensure that OrderedDict receives headers in correct order
-            self._haproxy['conf'] = collections.OrderedDict()
-            self._haproxy['conf']['global'] = []
-            self._haproxy['conf']['defaults'] = []
-            self._haproxy['conf']['listen stats'] = []
+            self._haproxy['conf'] = OrderedDict()
+            for header in self._config['haproxy']:
+                self._haproxy['conf'][header] = self._config['haproxy'][header]
+
+            self._haproxy['conf'].setdefault('global', [])
             socket = 'stats socket /run/haproxy/admin.sock mode 600 level admin'
             self._haproxy['conf']['global'].append(socket)
             self._haproxy['conf']['global'].append('stats timeout 2m')
-            for header in self._config['haproxy']:
-                self._haproxy['conf'][header] += self._config['haproxy'][header]
 
         services = {}
 
@@ -50,11 +49,8 @@ class ConfParse(object):
 
                 if ('hold_conns' in info['elasticity'] and
                         info['elasticity']['hold_conns']):
-                    self.add_listen_block(service + '_proxy',
-                                          info['haproxy']['listen'],
-                                          info['haproxy']['port'])
-                    self.add_listen_block(service, info['haproxy']['listen'],
-                                          info['haproxy']['port'] + 1)
+                    self.add_proxy(service, info['haproxy']['listen'],
+                                   info['haproxy']['port'])
                     info['elasticity']['shutoff_time'] = 0
                     info['elasticity']['min_servers'] = 0
                     continue
@@ -72,12 +68,18 @@ class ConfParse(object):
          ['properties'].append(bind.format(port)))
         self._haproxy['services'][service]['servers'] = {}
 
+    def add_proxy(self, service, properties, port):
+        proxy_properties = properties
+        proxy_properties.append('timeout server 1d')
+        self.add_listen_block(service + '_proxy', proxy_properties, port)
+        self.add_server(service + '_proxy', service, '0.0.0.0:' + str(port + 1),
+                        ['check'])
+        self.add_listen_block(service, properties, port + 1)
+
     def remove_listen_block(self, service):
         del self._haproxy['services'][service]
 
     def add_server(self, service, instance, address, properties):
-        # print(instance)
-        # print(self._haproxy['services'][service]['servers'])
         self._haproxy['services'][service]['servers'][instance] = {}
         (self._haproxy['services'][service]['servers']
          [instance]['address']) = address

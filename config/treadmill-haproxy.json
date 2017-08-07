@@ -33,6 +33,38 @@
         "port": 8000,
         "endpoint": "http"
       }
+    },
+    "connection_hold": {
+      "elasticity": {
+        "method": "conn_rate",
+        "steps": [100, 300],
+        "hold_conns": true,
+        "cooldown": 60
+      },
+      "haproxy": {
+        "server": ["check", "maxconn 10"],
+        "listen": ["mode http"],
+        "port": 7000
+      },
+      "treadmill": {
+        "appname": "treadmld.haproxy_hold",
+        "manifest": "/home/vagrant/treadmill-haproxy/config/manifest.yaml",
+        "port": 7000,
+        "endpoint": "http"
+      }
+    },
+    "passive": {
+      "haproxy": {
+        "server": ["check", "maxconn 10"],
+        "listen": ["mode http"],
+        "port": 7000
+      },
+      "treadmill": {
+        "appname": "treadmld.haproxy_passive",
+        "manifest": "/home/vagrant/treadmill-haproxy/config/manifest.yaml",
+        "port": 5000,
+        "endpoint": "http"
+      }
     }
   }
 }

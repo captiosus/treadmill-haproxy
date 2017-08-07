@@ -63,7 +63,7 @@
                   "type": "string"
                 }
               },
-              "required": ["appname", "manifest", "port"]
+              "required": ["appname", "manifest", "port", "endpoint"]
             },
             "elasticity": {
               "description": "Settings for the elasticity of service",

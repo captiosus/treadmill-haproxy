@@ -15,10 +15,13 @@ _LOGGER = logging.getLogger(__name__)
               help="Configuration file")
 @click.option('--haproxy-config', 'haproxy_file',
               default='config/haproxy.conf')
-def main(socket, config_file, haproxy_file):
+@click.option('--debug', is_flag=True, default=False)
+def main(socket, config_file, haproxy_file, debug):
     """Configure logging and start monitering"""
-    logging.basicConfig(level=logging.INFO)
-    _LOGGER.setLevel(logging.INFO)
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
     orch = Orchestrator(socket, config_file, haproxy_file)
     orch.monitor()
 

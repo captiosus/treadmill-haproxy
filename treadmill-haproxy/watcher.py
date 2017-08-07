@@ -32,6 +32,7 @@ class Watcher(object):
             self._haproxy_conf['server'])
 
     def loop(self):
+        logging.info('Starting watcher loop for %s', self._service_name)
         up_servers = self.discover_servers()
         changes = False
 
@@ -48,6 +49,8 @@ class Watcher(object):
                 self._haproxy_parser.delete_server(self._service_name, instance)
                 changes = True
 
-        if changes:
-            self._haproxy_parser.config_write()
-            haproxy_control.restart_haproxy()
+        return changes
+        # if changes:
+        #     logging.debug("Write to config and restart")
+        #     self._haproxy_parser.config_write()
+        #     haproxy_control.restart_haproxy()

@@ -29,7 +29,8 @@ class Pool(object):
         self._healthy = None
 
         if 'hold_conns' in self._elasticity and self._elasticity['hold_conns']:
-            self._haproxy_front = haproxy.frontend(service_name + '_proxy')
+            self._haproxy_front = haproxy.frontend(service_name)
+            self._haproxy_proxy = haproxy.backend(service_name + '_proxy')
 
         atexit.register(self._cleanup)
 
@@ -80,20 +81,16 @@ class Pool(object):
             self.breakpoint(response, max_resp)
 
     def server_steps(self, max_measure):
-        min_servers = self._elasticity['min_servers']
-        max_servers = self._elasticity['max_servers']
-
         for step, measure in enumerate(self._elasticity['steps']):
             if max_measure >= measure:
-                if not (max_servers and self._target > max_servers):
-                    self._target = min_servers + step
+                self._target = self._elasticity['min_servers'] + step
 
     def breakpoint(self, curr_measure, max_measure):
         min_servers = self._elasticity['min_servers']
         max_servers = self._elasticity['max_servers']
 
         if curr_measure > self._elasticity['breakpoint']:
-            if not (max_servers and self._target > max_servers):
+            if not max_servers or self._target < max_servers:
                 self._target += 1
         if max_measure < self._elasticity['breakpoint']:
             if self._target > min_servers:
@@ -101,22 +98,27 @@ class Pool(object):
 
     def hold_conns(self):
         if self._elasticity['shutoff_time'] < time.time():
-            new_conns = int(self._haproxy.metric('scur'))
+            new_conns = int(self._haproxy_proxy.metric('scur'))
+            logging.debug("New Conns: %d", new_conns)
 
             if new_conns:
+                self._elasticity['min_servers'] += 1
                 self._target += 1
 
                 new_time = time.time() + self._elasticity['cooldown']
                 self._elasticity['shutoff_time'] = new_time
             elif self._target > 0:
+                self._elasticity['min_servers'] -= 1
                 self._target -= 1
 
-            if self._target == 0:
-                self._haproxy_front.setmaxconn(0)
-            else:
+            if self._healthy:
                 self._haproxy_front.setmaxconn(2000)
+            else:
+                self._haproxy_front.setmaxconn(0)
 
     def keep_target(self):
+        logging.debug("Target %d", self._target)
+
         new_healthy = self.healthy_servers()
 
         # Can be empty list, but None specifically means initial loop
@@ -125,11 +127,11 @@ class Pool(object):
 
         self._healthy = new_healthy
 
-        print("pending: " + str(self._pending))
-        print("healthy: " + str(len(self._healthy)))
+        logging.debug("Pending: %d", self._pending)
+        logging.debug("Healthy: %d", len(self._healthy))
 
         diff = len(self._healthy) + self._pending - self._target
-        print("diff: " + str(diff))
+        logging.debug("Diff: %d", + diff)
 
         if diff > 0:
             for idx in range(abs(diff)):
@@ -139,11 +141,11 @@ class Pool(object):
             for _ in range(abs(diff)):
                 self.add_server()
                 self._pending += 1
-        logging.info("Target %d", self._target)
 
     def loop(self):
-        logging.info('Starting loop for %s', self._service_name)
-        self.adjust_servers()
+        logging.info('Starting pool loop for %s', self._service_name)
+        if 'method' in self._elasticity:
+            self.adjust_servers()
         if 'hold_conns' in self._elasticity and self._elasticity['hold_conns']:
             self.hold_conns()
         self.keep_target()
