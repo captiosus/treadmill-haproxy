@@ -28,8 +28,8 @@ def discover_container(app, instance=None):
             name, address = container.split(' ')
             app, _, name = name.split(':')
             instance = app.split('#')[1]
-            containers_fmt[instance] = {'name': name,
-                                        'address': address}
+            containers_fmt.setdefault(instance, {})
+            containers_fmt[instance][name] = address
         else:
             return None
     return containers_fmt

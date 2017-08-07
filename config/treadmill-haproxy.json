@@ -6,10 +6,22 @@
       "timeout client 5000ms",
       "timeout server 5000ms",
       "balance roundrobin"
+    ],
+    "listen stats": [
+      "stats enable",
+      "stats uri /",
+      "mode http",
+      "stats show-legends",
+      "bind *:9000"
     ]
   },
   "services": {
     "demo": {
+      "elasticity": {
+        "method": "conn_rate",
+        "steps": [100, 300],
+        "min_servers": 1
+      },
       "haproxy": {
         "server": ["check", "maxconn 10"],
         "listen": ["mode http"],
@@ -18,24 +30,8 @@
       "treadmill": {
         "appname": "treadmld.haproxy",
         "manifest": "/home/vagrant/treadmill-haproxy/config/manifest.yaml",
-        "port": 8000
-      }
-    },
-    "connection_hold": {
-      "elasticity": {
-        "method": "conn_rate",
-        "steps": [100, 300],
-        "hold_conns": true
-      },
-      "haproxy": {
-        "server": ["check", "maxconn 10"],
-        "listen": ["mode http"],
-        "port": 7000
-      },
-      "treadmill": {
-        "appname": "treadmld.haproxy_hold",
-        "manifest": "/home/vagrant/treadmill-haproxy/config/manifest.yaml",
-        "port": 7000
+        "port": 8000,
+        "endpoint": "http"
       }
     }
   }

@@ -26,7 +26,10 @@ class Pool(object):
 
         self._target = self._elasticity['min_servers']
         self._pending = 0
-        self._healthy = self.healthy_servers()
+        self._healthy = None
+
+        if 'hold_conns' in self._elasticity and self._elasticity['hold_conns']:
+            self._haproxy_front = haproxy.frontend(service_name + '_proxy')
 
         atexit.register(self._cleanup)
 
@@ -105,30 +108,42 @@ class Pool(object):
 
                 new_time = time.time() + self._elasticity['cooldown']
                 self._elasticity['shutoff_time'] = new_time
-            else:
+            elif self._target > 0:
                 self._target -= 1
+
+            if self._target == 0:
+                self._haproxy_front.setmaxconn(0)
+            else:
+                self._haproxy_front.setmaxconn(2000)
 
     def keep_target(self):
         new_healthy = self.healthy_servers()
 
-        if len(new_healthy) > len(self._healthy):
-            self._pending -= len(new_healthy) - len(self._healthy)
+        # Can be empty list, but None specifically means initial loop
+        if self._healthy != None:
+            self._pending -= (len(new_healthy) - len(self._healthy))
 
-        self._pending = max(self._pending, 0)
         self._healthy = new_healthy
 
+        print("pending: " + str(self._pending))
+        print("healthy: " + str(len(self._healthy)))
+
         diff = len(self._healthy) + self._pending - self._target
+        print("diff: " + str(diff))
 
         if diff > 0:
             for idx in range(abs(diff)):
                 self.delete_server(self._healthy[idx].name)
+                self._pending -= 1
         else:
             for _ in range(abs(diff)):
                 self.add_server()
                 self._pending += 1
+        logging.info("Target %d", self._target)
 
     def loop(self):
+        logging.info('Starting loop for %s', self._service_name)
         self.adjust_servers()
-        # if 'hold_conns' in self._elasticity and self._elasticity['hold_conns']:
-        #     self.hold_conns()
+        if 'hold_conns' in self._elasticity and self._elasticity['hold_conns']:
+            self.hold_conns()
         self.keep_target()

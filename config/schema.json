@@ -57,6 +57,10 @@
                 "port": {
                   "description": "Open port on treadmill app",
                   "type": "integer"
+                },
+                "endpoint": {
+                  "description": "Endpoint for treadmill app",
+                  "type": "string"
                 }
               },
               "required": ["appname", "manifest", "port"]

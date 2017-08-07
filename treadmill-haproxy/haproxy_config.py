@@ -28,9 +28,10 @@ class ConfParse(object):
     def parse_config(self):
         if 'haproxy' in self._config:
             # Loop to ensure that OrderedDict receives headers in correct order
-            self._haproxy['conf'] = {}
+            self._haproxy['conf'] = collections.OrderedDict()
             self._haproxy['conf']['global'] = []
             self._haproxy['conf']['defaults'] = []
+            self._haproxy['conf']['listen stats'] = []
             socket = 'stats socket /run/haproxy/admin.sock mode 600 level admin'
             self._haproxy['conf']['global'].append(socket)
             self._haproxy['conf']['global'].append('stats timeout 2m')
@@ -41,7 +42,9 @@ class ConfParse(object):
 
 
         for service, info in self._config['services'].items():
-            if 'elasticity' in service:
+            services[service] = info
+
+            if 'elasticity' in info:
                 info['elasticity'].setdefault('min_servers', 0)
                 info['elasticity'].setdefault('max_servers', None)
 
@@ -59,7 +62,6 @@ class ConfParse(object):
             self.add_listen_block(service, info['haproxy']['listen'],
                                   info['haproxy']['port'])
 
-            services[service] = info
         return services
 
     def add_listen_block(self, service, properties, port):

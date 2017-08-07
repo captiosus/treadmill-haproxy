@@ -28,26 +28,26 @@ class Orchestrator(object):
 
         haproxy_sock = haproxy.HAProxy(socket_dir=socket)
 
-        for service in services:
+        for service_name, service in services.items():
             self._watchers.append(
-                watcher.Watcher(service, services[service], config_parser))
+                watcher.Watcher(service_name, service, config_parser))
 
             if 'elasticity' in service:
                 self._pools.append(
-                    pool.Pool(service, services[service], haproxy_sock,
+                    pool.Pool(service_name, service, haproxy_sock,
                               config_parser))
 
     def loop(self):
         """Loop through watchers and run the monitor loop for each"""
-        for watcher in self._watchers:
-            watcher.loop()
+        for service_watcher in self._watchers:
+            service_watcher.loop()
 
-        for pool in self._pools:
-            pool.loop()
+        for service_pool in self._pools:
+            service_pool.loop()
 
     def monitor(self):
         """Begin monitor loop"""
         log.startLogging(sys.stdout)
         self._loop = task.LoopingCall(self.loop)
-        self._loop.start(2)
+        self._loop.start(5)
         reactor.run()

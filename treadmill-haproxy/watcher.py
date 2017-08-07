@@ -20,8 +20,8 @@ class Watcher(object):
 
         if servers:
             for instance, server in servers.items():
-                if server['name'] != 'ssh':
-                    valid[instance] = server
+                if self._treadmill['endpoint'] in server:
+                    valid[instance] = server[self._treadmill['endpoint']]
 
         return valid
 
@@ -31,22 +31,23 @@ class Watcher(object):
             self._service_name, instance, address,
             self._haproxy_conf['server'])
 
-    def commit_haproxy(self):
-        self._haproxy_parser.config_write()
-        haproxy_control.restart_haproxy()
-
     def loop(self):
         up_servers = self.discover_servers()
+        changes = False
 
         if up_servers:
             for instance, info in up_servers.items():
                 if not self._haproxy_parser.server_exists(self._service_name,
                                                           instance):
-                    self.confirm_server(instance, info['address'])
+                    self.confirm_server(instance, info)
+                    changes = True
 
         all_servers = self._haproxy_parser.get_servers(self._service_name)
         for instance in all_servers.keys():
             if instance not in up_servers:
                 self._haproxy_parser.delete_server(self._service_name, instance)
+                changes = True
 
-        self.commit_haproxy()
+        if changes:
+            self._haproxy_parser.config_write()
+            haproxy_control.restart_haproxy()
