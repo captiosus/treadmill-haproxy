@@ -6,8 +6,6 @@ import click
 
 from orchestrator import Orchestrator
 
-_LOGGER = logging.getLogger(__name__)
-
 @click.command()
 @click.option('--socket', default='/run/haproxy/', help='HAProxy socket')
 @click.option('--config', 'config_file',
