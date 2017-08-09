@@ -13,11 +13,6 @@ def stop_container(app, instance):
     cmd = ['treadmill', 'admin', 'master', 'app', 'delete', app + '#' + instance]
     subprocess.call(cmd)
 
-def stop_containers(app):
-    """Stops all containers and deletes the app through the command line"""
-    cmd = ['treadmill', 'admin', 'master', 'app', 'delete', app]
-    subprocess.call(cmd)
-
 def discover_container(app, instance=None):
     """Performs discovery of a containers endpoints. Filters based on instance
     if parameter specified. Formats results into a dict keyed by instance and

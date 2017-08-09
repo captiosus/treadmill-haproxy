@@ -37,14 +37,15 @@ def stop_haproxy():
     if proc:
         proc.send_signal(signal.SIGUSR1)
     else:
-        _LOGGER.error
+        _LOGGER.error('HAProxy is not running')
 
 def restart_haproxy():
     """Restarts HAProxy if process actually exists"""
-    try:
-        proc = haproxy_proc()
-    except psutil.NoSuchProcess:
-        return
+    proc = haproxy_proc()
+    if proc:
+        proc.send_signal(signal.SIGUSR1)
+    else:
+        _LOGGER.error('HAProxy is not running')
     # Base command
     cmd = ['/usr/sbin/haproxy']
     # Config file

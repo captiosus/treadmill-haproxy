@@ -4,7 +4,7 @@ import logging
 
 import click
 
-from orchestrator import Orchestrator
+from conductor import Conductor
 
 @click.command()
 @click.option('--socket', default='/run/haproxy/', help='HAProxy socket')
@@ -20,8 +20,8 @@ def main(socket, config_file, haproxy_file, debug):
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
-    orch = Orchestrator(socket, config_file, haproxy_file)
-    orch.monitor()
+    conductor = Conductor(socket, config_file, haproxy_file)
+    conductor.monitor()
 
 
 if __name__ == '__main__':

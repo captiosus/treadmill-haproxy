@@ -15,7 +15,7 @@ def load_json(filepath):
         return json.loads(json_file.read(), object_pairs_hook=OrderedDict)
 
 
-class ConfParse(object):
+class Configurator(object):
     """Parses user config file and writes to the haproxy config file"""
     def __init__(self, socket, conf_file, haproxy_conf_file):
         """Loads the schema and validates the user config against it"""
